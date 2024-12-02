@@ -8,15 +8,54 @@ const messageInput = document.querySelector("#msg");
 const messages = document.querySelector(".messages");
 
 // Getting username from index.html, here qs is a library to parse querystring in url 
-const {username} = Qs.parse(location.search, {ignoreQueryPrefix: true});
+const { username } = Qs.parse(location.search, { ignoreQueryPrefix: true });
 
-/////////////////////// IMPLEMENT BELOW STEPS //////////////////////
+// Emit 'userJoin' event to the server with the username
+socket.emit("userJoin", username);
 
-// Send username about "userJoin" to server 
+// Listen for 'updateUsers' event from the server and update the users list
+socket.on("updateUsers", (users) => {
+  // Clear the existing list
+  usersList.innerHTML = '';
+  
+  // Populate the users list with new users
+  users.forEach(user => {
+    const li = document.createElement("li");
+    li.textContent = user.username;
+    usersList.appendChild(li);
+  });
+});
 
-// Listen for "updateUsers" from server and update usersList with new list of users, each user should be a li element containing username.
+// Listen for 'message' event from the server and display the message
+socket.on("message", (msgData) => {
+  const { username, message } = msgData;
+  
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message");
+  
+  const meta = document.createElement("p");
+  meta.classList.add("meta");
+  meta.textContent = username;
+  
+  const text = document.createElement("p");
+  text.classList.add("text");
+  text.textContent = message;
+  
+  messageDiv.appendChild(meta);
+  messageDiv.appendChild(text);
+  
+  messages.appendChild(messageDiv);
+});
 
-// Listen for "message" from server and add new msg to messages, each message is a div element with class "message" 
-// containing 2 paragraphs, one with class "meta" containing username & other with class "text" containing message.
-
-// When a user submit a message in chatForm send {username: username, message: messageInput.value } about chatMessage to server 
+// Listen for form submission to send chat messages to the server
+chatForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  
+  const message = messageInput.value;
+  
+  // Emit 'chatMessage' event to the server with username and message
+  socket.emit("chatMessage", { username, message });
+  
+  // Clear the input field after sending the message
+  messageInput.value = '';
+});

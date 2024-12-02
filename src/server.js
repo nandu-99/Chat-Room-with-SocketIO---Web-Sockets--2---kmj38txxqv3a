@@ -31,6 +31,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 
   // Listen for "chatMessage" for any message and send {username:msg.username,message:msg.message} about "message" to every socket
 
+io.on("connection", (socket)=>{
+  console.log("user connected", socket.id)
+  socket.emit("message", {username:"Bot", message:"Welcome to chatbox"})
+  socket.on("userJoin", (username)=>{
+    users.push({id: socket.id, username:username})
+    socket.broadcast.emit("message",{username:"Bot",message:`${username} has joined the chat`})
+    io.emit("updateUsers", users)
+  })
+  socket.on("chatMessage", (msg)=>{
+    io.emit("message", {username:msg.username,message:msg.message})
+  })
+  socket.on("disconnect", ()=>{
+    const userIndex = users.findIndex((user)=>user.id==socket.id)
+    if(userIndex!=-1){
+      const username = users[userIndex].username 
+      socket.broadcast.emit("message", {username:"Bot",message:`${username} has left the chat`})
+      users.splice(userIndex, 1)
+      io.emit("udpateUsers", users)
+    }
+  })
+})
+
 
 let server = http.listen(port, () => console.log(`Server Running at port ${port}`));
 
