@@ -40,8 +40,8 @@ io.on("connection", (socket)=>{
     io.emit("updateUsers", users)
   })
 
-  socket.on("message", (msg)=>{
-    io.emit("chatMessage", {username:msg.username,message:msg.message})
+  socket.on("chatMessage", (msg)=>{
+    io.emit("message", {username:msg.username,message:msg.message})
   })
 
   socket.on("disconnect", ()=>{
